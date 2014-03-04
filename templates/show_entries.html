@@ -10,6 +10,18 @@
         <dd><input type=submit value=Submit>
       </dl>
     </form>
+<!-- test for delete -->
+    <form action="{{ url_for('delete_entry') }}" method=post>
+        <input type="hidden" name="_method" value="DELETE" />
+        <input type="submit" value="Delete entry" />
+    </form>
+<!-- test for find -->
+    <form action="{{ url_for('find_entry') }}"  method=post>
+        <dt>Find Field Name:
+        <dd><input type=text size=30 name="xfield">
+        <input type="submit" value="Find entry" >
+    </form>
+
   {% endif %}
   <ul class=entries>
   {% for entry in entries %}

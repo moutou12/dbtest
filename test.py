@@ -67,6 +67,41 @@ def add_entry():
     flash('New entry was successfully posted')
     return redirect(url_for('show_entries'))
 
+def query_db(query, args=(), one=False):
+    cur = get_db().execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    return (rv[0] if rv else None) if one else rv
+
+@app.route('/delete', methods=['POST'])
+def delete_entry():
+    if not session.get('logged_in'):
+        abort(401)
+    db = get_db()
+#    cur = db.execute('select * from system_type order by rowid desc limit 1')
+#   entry = cur.fetchone()
+    entry = query_db('select * from system_type order by rowid desc limit 1', one=True)
+    a = entry["id"]
+    db.execute('delete from system_type where id = ?', [a])
+    db.commit()
+    flash('Entry was successfully deleted')
+    return redirect(url_for('show_entries'))
+
+@app.route('/get', methods=['POST'])
+def find_entry():
+    if not session.get('logged_in'):
+        abort(401)
+    db = get_db()
+#    entries = query_db('select * from system_type where id = 1')
+#    xfield = request.form['xfield']
+#    print xfield
+
+    entries = query_db('select * from system_type where test_field = ?',
+                     (request.form['xfield'],))
+#    flash('Entry was successfully deleted')
+#    return redirect(url_for('find_entries')
+    return render_template('show_entries.html', entries=entries)
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
