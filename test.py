@@ -56,16 +56,18 @@ def show_entries():
     return render_template('show_entries.html', entries=entries)
 
 
-@app.route('/add', methods=['POST'])
+@app.route('/add', methods=['GET','POST'])
 def add_entry():
     if not session.get('logged_in'):
         abort(401)
-    db = get_db()
-    db.execute('insert into system_type (test_field, field_desc) values (?, ?)',
-                 [request.form['test_field'], request.form['field_desc']])
-    db.commit()
-    flash('New entry was successfully posted')
-    return redirect(url_for('show_entries'))
+    if request.method == 'POST':
+        db = get_db()
+        db.execute('insert into system_type (test_field, field_desc) values (?, ?)',
+                     [request.form['test_field'], request.form['field_desc']])
+        db.commit()
+        flash('New entry was successfully posted')
+        return redirect(url_for('show_entries'))
+    return render_template ('add_entries.html')
 
 def query_db(query, args=(), one=False):
     cur = get_db().execute(query, args)
@@ -73,34 +75,50 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
+@app.route('/find', methods=['GET','POST'])
+def find_entry():
+    if not session.get('logged_in'):
+        abort(401)
+    if request.method == 'POST':
+        db = get_db()
+        entries = query_db('select * from system_type where test_field = ?',
+                     (request.form['xfield'],))
+#        if entries is None:
+        if not entries:
+            flash ("No records found")
+        else:
+            global g_id
+            g_id = entries[0]["id"]
+        return render_template('find_entries.html', entries=entries)
+
+    return render_template('find_entries.html')
+
+
 @app.route('/delete', methods=['POST'])
 def delete_entry():
     if not session.get('logged_in'):
         abort(401)
     db = get_db()
-#    cur = db.execute('select * from system_type order by rowid desc limit 1')
-#   entry = cur.fetchone()
-    entry = query_db('select * from system_type order by rowid desc limit 1', one=True)
-    a = entry["id"]
-    db.execute('delete from system_type where id = ?', [a])
+    db.execute('delete from system_type where id = ?', [g_id])
     db.commit()
     flash('Entry was successfully deleted')
     return redirect(url_for('show_entries'))
 
-@app.route('/get', methods=['POST'])
-def find_entry():
+@app.route('/modify', methods=['GET','POST'])
+def modify_entry():
     if not session.get('logged_in'):
         abort(401)
-    db = get_db()
-#    entries = query_db('select * from system_type where id = 1')
-#    xfield = request.form['xfield']
-#    print xfield
+    if request.method == 'POST':
+        db = get_db()
+        db.execute('update system_type set test_field = ?, field_desc = ? where id = ?', [request.form['test_field'], request.form['field_desc'],g_id])
+        db.commit()
+        flash('Entry was successfully updated')
+        return redirect(url_for('show_entries'))
+    if request.method == 'GET':
+        db = get_db()
+        entry = query_db("select * from system_type where id = ?", [g_id], one=True)
+        return render_template("modify_entries.html", testfield=entry["test_field"], desc=entry["field_desc"])
 
-    entries = query_db('select * from system_type where test_field = ?',
-                     (request.form['xfield'],))
-#    flash('Entry was successfully deleted')
-#    return redirect(url_for('find_entries')
-    return render_template('show_entries.html', entries=entries)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

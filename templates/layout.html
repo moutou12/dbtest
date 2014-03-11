@@ -7,6 +7,8 @@
   {% if not session.logged_in %}
     <a href="{{ url_for('login') }}">log in</a>
   {% else %}
+    <a href="{{ url_for('add_entry') }}">Add</a>
+    <a href="{{ url_for('find_entry') }}">Query</a> 
     <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}
   </div>
