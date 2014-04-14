@@ -75,31 +75,65 @@ def query_db(query, args=(), one=False):
     cur.close()
     return (rv[0] if rv else None) if one else rv
 
+# function to check whether a string contains
+# any character in the set
+
+def containsAny(str, set):
+    return 1 in [c in str for c in set]
+
+def hello():
+    print "hello"
+
 @app.route('/find', methods=['GET','POST'])
 def find_entry():
     if not session.get('logged_in'):
         abort(401)
     if request.method == 'POST':
         db = get_db()
-        entries = query_db('select * from system_type where test_field = ?',
-                     (request.form['xfield'],))
+#!  Revisit later, may need to write a function to establish the query text
+      
+        xfield_str = request.form['xfield']
+        if not xfield_str:
+            xfield_str = '%'
+        if containsAny(xfield_str,'%_*'):
+            query_text = 'select * from system_type where test_field like ?'
+        else:
+            query_text = 'select * from system_type where test_field = ?' 
+        entries = query_db(query_text, (xfield_str,))
 #        if entries is None:
         if not entries:
             flash ("No records found")
         else:
-            global g_id
-            g_id = entries[0]["id"]
-        return render_template('find_entries.html', entries=entries)
+#            global g_id
+#            g_id = entries[0]["id"]
+            return render_template('select_action.html', entries=entries)
+
 
     return render_template('find_entries.html')
 
+@app.route('/action', methods=['POST'])
+def select_action():
+    ids = request.form.getlist("selected")
+    action = request.form['action']
+    if action == "Delete": 
+        return delete_entry(ids)
+    if action == "Modify":
+        return modify_all(ids)
+
+def modify_all(ids):
+    for id in ids:
+#        modify_entry(id)
+        entry = query_db("select * from system_type where id = ?", [id], one=True)
+        return render_template("modify_entries.html", testfield=entry["test_field"], desc=entry["field_desc"], id=entry["id"])
+#        return render_template("modify_entries.html", entry=entry)      
 
 @app.route('/delete', methods=['POST'])
-def delete_entry():
+def delete_entry( ids ):
     if not session.get('logged_in'):
         abort(401)
     db = get_db()
-    db.execute('delete from system_type where id = ?', [g_id])
+    for id in ids:
+        db.execute('delete from system_type where id = ?', [id])
     db.commit()
     flash('Entry was successfully deleted')
     return redirect(url_for('show_entries'))
@@ -108,16 +142,22 @@ def delete_entry():
 def modify_entry():
     if not session.get('logged_in'):
         abort(401)
+#    entry = query_db("select * from system_type where id = ?", [id], one=True)
+#    return render_template("modify_entries.html", testfield=entry["test_field"], desc=entry["field_desc"])
+
+
     if request.method == 'POST':
         db = get_db()
-        db.execute('update system_type set test_field = ?, field_desc = ? where id = ?', [request.form['test_field'], request.form['field_desc'],g_id])
+#        id = request.args.get('id')
+        
+        db.execute('update system_type set test_field = ?, field_desc = ? where id = ?', [request.form['test_field'], request.form['field_desc'], request.form['id']])
         db.commit()
         flash('Entry was successfully updated')
         return redirect(url_for('show_entries'))
     if request.method == 'GET':
         db = get_db()
-        entry = query_db("select * from system_type where id = ?", [g_id], one=True)
-        return render_template("modify_entries.html", testfield=entry["test_field"], desc=entry["field_desc"])
+ #       entry = query_db("select * from system_type where id = ?", [g_id], one=True)
+ #       return render_template("modify_entries.html", testfield=entry["test_field"], desc=entry["field_desc"])
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -145,4 +185,4 @@ def logout():
 if __name__ == '__main__':
      init_db()
      app.run
-#(port=8080, host='0.0.0.0')
+# (port=8080, host='0.0.0.0')

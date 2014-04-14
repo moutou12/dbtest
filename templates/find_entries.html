@@ -3,26 +3,11 @@
   {% if session.logged_in %}
 <!-- test for find -->
     <form action="{{ url_for('find_entry') }}"  method=post>
-        <dt>Find Field Name:
+        <dt>Please enter search criteria:
         <dd><input type=text size=30 name="xfield">
         <input type="submit" value="Find entry" >
     </form>
-    <form action="{{ url_for('delete_entry') }}" method=post>
-        <input type="hidden" name="_method" value="DELETE" />
-        <input type="submit" value="Delete entry" />
-    </form>
-    <form action="{{ url_for('modify_entry') }}" >
-<!--        <input type="hidden" name="_method" value="MODIFY" />  -->
-        <input type="submit" value="Modify entry" />
-    </form>
 
   {% endif %}
-  <ul class=entries>
-  {% for entry in entries %}
-    <li><h2>{{ entry.test_field }}</h2>{{ entry.field_desc|safe }}
-  {% else %}
-    <li><em>No entries in the table so far</em>
-  {% endfor %}
-  </ul>
-
 {% endblock %}
+
