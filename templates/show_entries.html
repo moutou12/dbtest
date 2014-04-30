@@ -1,19 +1,32 @@
 {% extends "layout.html" %}
 {% block body %}
-  <ul class=entries>
-  <table style="width:300px">
-  <tr>
-     <th align="left">test Field</th>
-     <th align="left">Field Description</th>
-  </tr>
-  {% for entry in entries %}
+  {% if session.logged_in %}
+    <form action="{{ url_for('select_action') }}" method=post >
+        <input type="submit" name="action" value="Delete" />
+        <input type="submit" name="action" value="Modify" />
+    <ul class=entries>
+    <table style="width:300px">
     <tr>
-       <td>{{ entry.test_field }}</td>
-       <td>{{ entry.field_desc|safe }}</td>
+        <th></th>
+        <th align="left">Test Field</th>
+        <th align="left">Field Description</th>
     </tr>
+    {% for entry in entries %}
+        <tr>
+        <td><input type=checkbox name=selected value="{{ entry.id }}"></td>
+        <td>{{ entry.test_field }}</td>
+        <td>{{ entry.field_desc|safe }}</td>
+        </tr>
   {% else %}
     <li><em>No entries in the table so far</em>
   {% endfor %}
   </table>
   </ul>
+
+    </form>
+
+  {% endif %}
+
 {% endblock %}
+
+

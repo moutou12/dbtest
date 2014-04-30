@@ -50,10 +50,20 @@ def close_db(error):
 
 @app.route('/')
 def show_entries():
-    db = get_db()
-    cur = db.execute('select test_field, field_desc from system_type order by id desc')
-    entries = cur.fetchall()
+#    db = get_db()
+#    cur = db.execute('select test_field, field_desc from system_type order by id desc')
+#    entries = cur.fetchall()
+#    return render_template('show_entries.html', entries=entries)
+    query_text = 'select * from system_type order by id desc'
+    entries = query_db(query_text)
+#        if entries is None:
+#        if not entries:
+#            flash ("No records found")
+#        else:
+#            global g_id
+#            g_id = entries[0]["id"]
     return render_template('show_entries.html', entries=entries)
+
 
 
 @app.route('/add', methods=['GET','POST'])
@@ -106,7 +116,7 @@ def find_entry():
         else:
 #            global g_id
 #            g_id = entries[0]["id"]
-            return render_template('select_action.html', entries=entries)
+            return render_template('show_entries.html', entries=entries)
 
 
     return render_template('find_entries.html')
@@ -184,5 +194,6 @@ def logout():
 
 if __name__ == '__main__':
      init_db()
-     app.run
+     app.run()
+#     app.run(port=8080, host='0.0.0.0')
 # (port=8080, host='0.0.0.0')
